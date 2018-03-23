@@ -1,6 +1,6 @@
 # bigdata_arctoolbox
 
-## Hive (Esri Unenclosed Json formated) to local json
+## HDFS to local - Esri JSON 
 ![img](images/h2j.png)
 
 ## Dependencies
