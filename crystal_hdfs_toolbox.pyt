@@ -16,11 +16,11 @@ class hdfs2localfs(object):
     
     def __init__(self):
         
-        self.label = "Hive (Esri Unenclosed Json formated) to local json"
-        self.description = "This tool gets files from a Hadoop WebHDFS REST API path to an Hive table" + \
-                           "and concatenetes the part-* files into one output local file. " + \
-                           "This tools assumes that the warehouse Hive files are formated with " + \
-                           "the Esri Unenclosed Json input format."
+        self.label = "HDFS Esri Json to local"
+        self.description = "This tool gets files from a Hadoop WebHDFS REST API path " + \
+                           "and concatenetes the part-* files into one output local file." + \
+                           "This tools assumes that the files composed by features " + \
+						   "formated as Esri JSON."
                     
 
     def getParameterInfo(self):
@@ -58,36 +58,45 @@ class hdfs2localfs(object):
             parameterType="Required",
             direction="Input")
         
-        # Fourth  parameter
+        # Fifth  parameter
         param4 = arcpy.Parameter(
+            displayName="Coordinate System",
+            name="coordinate_system",
+            datatype="GPCoordinateSystem",
+            parameterType="Optional",
+            direction="Input")
+        
+        # Sixth  parameter
+        param5 = arcpy.Parameter(
             displayName="Output Local File",
             name="outputlocalfile",
             datatype="DEFile",
             parameterType="Required",
             direction="Output")
 
-        param1.defaultEnvironmentName = '50070'
+        param1.values = '50070'
         
-        params = [param0, param1, param2, param3, param4]
+        params = [param0, param1, param2, param3, param4, param5]
         return params
     
     
     def execute(self, parameters, messages):
         # Parameters 
-        host = parameters[0].valueAsText            #'sandbox-hdp.hortonworks.com'
-        port = parameters[1].valueAsText            #'50070' 
-        user_name = parameters[2].valueAsText       #'arcgis'
-        webhdfsfile = parameters[3].valueAsText     #'apps/hive/warehouse/bins_agg'
-        outputlocalfile = parameters[4].valueAsText #str("hfs2local_{}.tmp".format(uuid.uuid4()))
+        host = parameters[0].valueAsText              #'sandbox-hdp.hortonworks.com'
+        port = parameters[1].valueAsText              #'50070' 
+        user_name = parameters[2].valueAsText         #'arcgis'
+        webhdfsfile = parameters[3].valueAsText       #'apps/hive/warehouse/bins_agg'
+        coordinate_system = parameters[4].valueAsText #
+        outputlocalfile = parameters[5].valueAsText   #str("hfs2local_{}.tmp".format(uuid.uuid4()))
 
         # Webhdfs Status Dict Structure
         webhdfs_fileStatuses = 'FileStatuses'
         webhdfs_fileStatus = 'FileStatus'
         webhdfs_pathSuffix = 'pathSuffix'
-        
+				
         #Messages
         informative = "Processing {:0>3} of {} parts : {} HDFS file to local"
-
+		
         hdfs = PyWebHdfsClient(host=host,port=port, user_name=user_name)
 
         fileStatuses = hdfs.list_dir(webhdfsfile)
@@ -95,7 +104,7 @@ class hdfs2localfs(object):
 
         localfile = open(outputlocalfile,'w')
 
-        localfile.write('{"features" : [\n')
+        localfile.write('{"features" : [\n')		
 
         nfiles = len(fileStatus)
         count = 1
@@ -112,7 +121,22 @@ class hdfs2localfs(object):
 
             count += 1
 
-        localfile.write('] }')
+        localfile.write(']\n')
+		
+        if coordinate_system is not None:
+            spatial_reference = arcpy.SpatialReference()
+            spatial_reference.loadFromString(coordinate_system)
+            wkid = spatial_reference.GCSCode if spatial_reference.GCSCode \
+			                                 else spatial_reference.PCSCode
+											 
+            if wkid :
+                localfile.write(',\n"spatialReference" : {"wkid" : ' + str(wkid)+ '}\n')
                 
+        localfile.write('}')
+
         localfile.close()
+		
+        return
+		
+		
     
