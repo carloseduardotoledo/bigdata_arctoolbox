@@ -1,15 +1,3 @@
-# bigdata_arctoolbox
-
-## HDFS to local - Esri JSON 
-![img](images/h2j.png)
-
-## Dependencies
-The Python [pywebhdfs](https://pypi.python.org/pypi/pywebhdfs) library is required for WebHDFS support.
-
-### Installing pywebhdfs:
-1. Start the ArcGIS Pro Python 3 conda environment: "%PROGRAMFILES%\ArcGIS\Pro\bin\Python\Scripts\proenv"
-1. pip install pywebhdfs
-
 ## Contributing
 Contributors are welcomes!
 
