@@ -1,7 +1,7 @@
 # bigdata_arctoolbox
 
 ## HDFS to local - Esri JSON 
-![img](../images/h2j.png)
+![img](../images/h2jmap.png)
 
 ## Dependencies
 The Python [pywebhdfs](https://pypi.python.org/pypi/pywebhdfs) library is required for WebHDFS support.
