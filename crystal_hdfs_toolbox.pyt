@@ -1,6 +1,7 @@
 import arcpy
 import json
-#import uuid
+import uuid
+import numbers
 from pywebhdfs.webhdfs import PyWebHdfsClient
 
 class Toolbox(object):
@@ -18,9 +19,9 @@ class hdfs2localfs(object):
         
         self.label = "HDFS Esri Json to local"
         self.description = "This tool gets files from a Hadoop WebHDFS REST API path " + \
-                           "and concatenetes the part-* files into one output local file." + \
-                           "This tools assumes that the files composed by features " + \
-						   "formated as Esri JSON."
+                           "and concatenetes the mapreduced part-* files into one output local file." + \
+                           "This tools assumes that the files are text files containing " + \
+						   "Esri JSON formated feature lines."
                     
 
     def getParameterInfo(self):
@@ -75,8 +76,10 @@ class hdfs2localfs(object):
             direction="Output")
 
         param1.values = '50070'
-        
+        param5.values = str("hfs2local_{}.json".format(uuid.uuid4()))
+		
         params = [param0, param1, param2, param3, param4, param5]
+		
         return params
     
     
@@ -97,6 +100,48 @@ class hdfs2localfs(object):
         #Messages
         informative = "Processing {:0>3} of {} parts : {} HDFS file to local"
 		
+		
+        def build_fields_json(json_line):
+
+            def generic_type_name(v):
+                if isinstance(v, numbers.Integral):
+                    return 'esriFieldTypeInteger'
+                elif isinstance(v, numbers.Real):
+                    return 'esriFieldTypeDouble'
+                elif isinstance(v, six.string_types):
+                    return 'esriFieldTypeString'
+                else:
+                    return None
+
+
+            fieldAliases = '"fieldAliases":{'
+            fieldAliases_element = ''
+
+            fields = '"fields":['
+            fields_element = ''
+
+            count = 0
+            for attribute in json_line["attributes"]:
+
+                if count : 
+                    fieldAliases_element += ','
+                    fields_element += ','
+
+                fieldAliases_element += '"{}":"{}"'.format(attribute,attribute)
+
+                fields_element += '"name":"{}","type":"{}","alias":"{}"'.format( \
+					attribute,generic_type_name(json_line["attributes"][attribute]),attribute)
+
+                count += 1
+
+            fields_element = '{' + fields_element + '}'
+
+            fieldAliases += fieldAliases_element + '}'
+            fields += fields_element + ']'
+
+            return '"displayFieldName":"",\n{},\n{},\n'.format(fieldAliases,fields)
+		
+		
         hdfs = PyWebHdfsClient(host=host,port=port, user_name=user_name)
 
         fileStatuses = hdfs.list_dir(webhdfsfile)
@@ -104,7 +149,23 @@ class hdfs2localfs(object):
 
         localfile = open(outputlocalfile,'w')
 
-        localfile.write('{"features" : [\n')		
+        localfile.write('{\n')
+
+        pathSuffix = fileStatus[0][webhdfs_pathSuffix]
+        sample_jsons = hdfs.read_file("{}/{}".format(webhdfsfile,pathSuffix)).decode("utf-8")
+        sample = sample_jsons.split('\n')[0]
+        localfile.write(build_fields_json(json.loads(sample)))
+		
+        if coordinate_system is not None:
+            spatial_reference = arcpy.SpatialReference()
+            spatial_reference.loadFromString(coordinate_system)
+            wkid = spatial_reference.GCSCode if spatial_reference.GCSCode \
+			                                 else spatial_reference.PCSCode
+											 
+            if wkid :
+                localfile.write('"spatialReference" : {"wkid" : ' + str(wkid)+ '},\n')
+
+        localfile.write('"features" : [\n')
 
         nfiles = len(fileStatus)
         count = 1
@@ -122,15 +183,6 @@ class hdfs2localfs(object):
             count += 1
 
         localfile.write(']\n')
-		
-        if coordinate_system is not None:
-            spatial_reference = arcpy.SpatialReference()
-            spatial_reference.loadFromString(coordinate_system)
-            wkid = spatial_reference.GCSCode if spatial_reference.GCSCode \
-			                                 else spatial_reference.PCSCode
-											 
-            if wkid :
-                localfile.write(',\n"spatialReference" : {"wkid" : ' + str(wkid)+ '}\n')
                 
         localfile.write('}')
 
