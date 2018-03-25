@@ -8,7 +8,7 @@ The Python [pywebhdfs](https://pypi.python.org/pypi/pywebhdfs) library is requir
 
 ### Installing pywebhdfs:
 1. Start the ArcGIS Pro Python 3 conda environment: "%PROGRAMFILES%\ArcGIS\Pro\bin\Python\Scripts\proenv"
-1. pip intall pywebhdfs
+1. pip install pywebhdfs
 
 ## Contributing
 Contributors are welcomes!
