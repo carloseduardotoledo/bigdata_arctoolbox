@@ -1,7 +1,11 @@
 # bigdata_arctoolbox
 
-## HDFS to local - Esri JSON 
+## Tools
+
+### HDFS to local - Esri JSON
 ![img](../images/h2jmap.png)
+
+This tool gets files from a Hadoop WebHDFS REST API path and concatenetes the mapreduced part-* files into one output local file. This tools assumes that the files are text files containing Esri JSON formated feature lines.
 
 ## Dependencies
 The Python [pywebhdfs](https://pypi.python.org/pypi/pywebhdfs) library is required for WebHDFS support.
