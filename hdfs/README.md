@@ -2,7 +2,7 @@
 
 ## Tools
 
-### HDFS to local - Esri JSON
+### HDFS Esri Json to local
 ![img](../images/h2jmap.png)
 
 This tool gets files from a Hadoop WebHDFS REST API path and concatenetes the mapreduced part-* files into one output local file. This tools assumes that the files are text files containing Esri JSON formated feature lines.
