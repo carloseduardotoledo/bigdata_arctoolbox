@@ -1,8 +1,10 @@
+# -*- coding: utf-8 -*-
 import arcpy
 import json
 import uuid
 import numbers
 import six
+import codecs
 from pywebhdfs.webhdfs import PyWebHdfsClient
 
 class Toolbox(object):
@@ -89,7 +91,7 @@ class hdfs2localfs(object):
         host = parameters[0].valueAsText              #'sandbox-hdp.hortonworks.com'
         port = parameters[1].valueAsText              #'50070' 
         user_name = parameters[2].valueAsText         #'arcgis'
-        webhdfsfile = parameters[3].valueAsText       #'apps/hive/warehouse/bins_agg'
+        webhdfsfile = parameters[3].valueAsText       #'apps/hive/warehouse/geo_servicos_municipio_ano'
         coordinate_system = parameters[4].valueAsText #
         outputlocalfile = parameters[5].valueAsText   #str("hfs2local_{}.tmp".format(uuid.uuid4()))
 
@@ -130,12 +132,10 @@ class hdfs2localfs(object):
 
                 fieldAliases_element += '"{}":"{}"'.format(attribute,attribute)
 
-                fields_element += '"name":"{}","type":"{}","alias":"{}"'.format( \
-					attribute,generic_type_name(json_line["attributes"][attribute]),attribute)
+                fields_element += '{' + '"name":"{}","type":"{}","alias":"{}"'.format( \
+					attribute,generic_type_name(json_line["attributes"][attribute]),attribute) + '}'
 
                 count += 1
-
-            fields_element = '{' + fields_element + '}'
 
             fieldAliases += fieldAliases_element + '}'
             fields += fields_element + ']'
@@ -147,8 +147,9 @@ class hdfs2localfs(object):
 
         fileStatuses = hdfs.list_dir(webhdfsfile)
         fileStatus = (fileStatuses[webhdfs_fileStatuses][webhdfs_fileStatus])
-
-        localfile = open(outputlocalfile,'w')
+		
+        localfile = codecs.open(outputlocalfile,'w',encoding='utf8')
+        #localfile = open(outputlocalfile,'w')
 
         localfile.write('{\n')
 
