@@ -2,6 +2,7 @@ import arcpy
 import json
 import uuid
 import numbers
+import six
 from pywebhdfs.webhdfs import PyWebHdfsClient
 
 class Toolbox(object):
